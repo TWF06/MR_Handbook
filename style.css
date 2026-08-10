@@ -204,6 +204,25 @@ button, input, select, textarea {
 .btn-secondary:hover {
   background-color: var(--border-color);
 }
+.btn-outline-secondary {
+  background-color: transparent;
+  border-color: var(--text-light);
+  color: var(--text-muted);
+}
+.btn-outline-secondary:hover {
+  background-color: var(--bg-surface-elevated);
+  border-color: var(--text-muted);
+  color: var(--text-main);
+}
+body.dark-mode .btn-outline-secondary {
+  border-color: var(--text-muted);
+  color: var(--text-main);
+}
+body.dark-mode .btn-outline-secondary:hover {
+  background-color: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+}
 .btn-outline-danger {
   background-color: transparent;
   border-color: var(--danger);
