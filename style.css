@@ -1899,3 +1899,26 @@ body.dark-mode .result-snippet mark {
     gap: 0.5rem;
   }
 }
+
+/* --------------------------------------------------------------------------
+   13. Watermark Styles
+   -------------------------------------------------------------------------- */
+.auth-footer-watermark {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.75rem;
+  color: var(--text-light);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+.sidebar-footer {
+  margin-top: auto;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-light);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  background-color: var(--bg-surface);
+}
