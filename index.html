@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MR Handbook Manager</title>
+  <!-- Google Fonts - Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css?v=2">
+  <!-- Markdown & Security Libraries (CDNs) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Icon Library -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="light-mode">
+
+  <!-- ================= TOAST NOTIFICATION CONTAINER ================= -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- ================= APP WRAPPER ================= -->
+  <div id="app" class="app-container">
+
+    <!-- ================= 1. AUTHENTICATION VIEW ================= -->
+    <div id="view-auth" class="auth-view hidden">
+      <div class="auth-card">
+        <div class="auth-header">
+          <div class="auth-logo">
+            <i data-lucide="book-open" class="logo-icon"></i>
+            <h2>MR Handbook</h2>
+          </div>
+          <p id="auth-subtitle">Sign in to access secure company documentation</p>
+        </div>
+
+        <!-- Login Form -->
+        <form id="form-login" class="auth-form">
+          <div class="form-group">
+            <label for="login-email">Email Address</label>
+            <div class="input-icon-wrapper">
+              <i data-lucide="mail"></i>
+              <input type="email" id="login-email" required placeholder="name@company.com">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <div class="input-icon-wrapper">
+              <i data-lucide="lock"></i>
+              <input type="password" id="login-password" required placeholder="••••••••">
+            </div>
+          </div>
+          <div class="auth-links">
+            <button type="button" id="btn-show-recover" class="text-btn">Forgot Password?</button>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">
+            <span>Sign In</span>
+            <i data-lucide="arrow-right"></i>
+          </button>
+        </form>
+
+        <!-- Recovery Form -->
+        <form id="form-recover" class="auth-form hidden">
+          <div class="form-group">
+            <label for="recover-email">Registered Email</label>
+            <div class="input-icon-wrapper">
+              <i data-lucide="mail"></i>
+              <input type="email" id="recover-email" required placeholder="name@company.com">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="recover-id">Employee ID</label>
+            <div class="input-icon-wrapper">
+              <i data-lucide="user-check"></i>
+              <input type="text" id="recover-id" required placeholder="WRK001">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="recover-new-pwd">New Password</label>
+            <div class="input-icon-wrapper">
+              <i data-lucide="key-round"></i>
+              <input type="password" id="recover-new-pwd" required placeholder="Min 6 characters">
+            </div>
+          </div>
+          <div class="auth-links">
+            <button type="button" id="btn-show-login" class="text-btn">Back to Login</button>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Reset Password</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ================= 2. MAIN APPLICATION WORKSPACE ================= -->
+    <div id="view-workspace" class="workspace-view hidden">
+      
+      <!-- Top Navigation Header -->
+      <header class="main-header">
+        <div class="header-left">
+          <button id="btn-toggle-sidebar" class="icon-btn btn-hamburger" aria-label="Toggle navigation">
+            <i data-lucide="menu"></i>
+          </button>
+          <div class="app-brand">
+            <i data-lucide="shield-check" class="brand-icon"></i>
+            <h1>MR Handbook Manager</h1>
+          </div>
+        </div>
+
+        <div class="header-center">
+          <!-- Global Search Input -->
+          <div class="search-bar-wrapper">
+            <i data-lucide="search" class="search-icon"></i>
+            <input type="text" id="global-search" placeholder="Search sections, documents, or keywords...">
+            <button id="btn-clear-search" class="clear-search-btn hidden">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <!-- Dark Mode Toggle -->
+          <button id="btn-toggle-theme" class="icon-btn" title="Toggle Theme">
+            <i data-lucide="moon" class="theme-icon-dark"></i>
+            <i data-lucide="sun" class="theme-icon-light hidden"></i>
+          </button>
+
+          <!-- User Quick Profile & Log Out -->
+          <div class="user-menu">
+            <div class="user-profile-badge" id="user-badge-name">U</div>
+            <div class="user-details-dropdown">
+              <div class="dropdown-header">
+                <span class="user-fullname" id="nav-user-name">Employee Name</span>
+                <span class="user-role" id="nav-user-role">Worker</span>
+              </div>
+              <div class="dropdown-actions">
+                <button id="btn-go-admin" class="dropdown-item hidden">
+                  <i data-lucide="layout-dashboard"></i> Admin Dashboard
+                </button>
+                <button id="btn-go-worker" class="dropdown-item hidden">
+                  <i data-lucide="book-open"></i> Worker Portal
+                </button>
+                <button id="btn-logout" class="dropdown-item text-danger">
+                  <i data-lucide="log-out"></i> Log Out
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Columns Wrapper -->
+      <div class="workspace-body">
+
+        <!-- Left Navigation Sidebar -->
+        <aside id="sidebar-left" class="sidebar sidebar-left">
+          <div class="sidebar-header">
+            <h3>Handbook Sections</h3>
+          </div>
+          <nav class="sidebar-nav" id="left-nav-sections">
+            <!-- Populated dynamically: Section items & FAQ -->
+          </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="content-viewport" id="content-container">
+
+          <!-- SEARCH RESULTS SECTION -->
+          <section id="pane-search-results" class="viewport-pane hidden">
+            <div class="pane-header">
+              <h2>Search Results</h2>
+              <button id="btn-close-search" class="btn btn-secondary btn-sm">Clear Search</button>
+            </div>
+            <p id="search-results-summary" class="results-summary">Found 0 matching entries.</p>
+            <div class="results-list" id="search-results-list">
+              <!-- Dynamically populated results cards -->
+            </div>
+          </section>
+
+          <!-- WORKER HANDBOOK VIEWER PANE -->
+          <section id="pane-worker-viewer" class="viewport-pane">
+            
+            <div class="document-viewer-layout">
+              <!-- Middle column: Document Content -->
+              <article class="document-content-area">
+                <nav class="breadcrumb" id="viewer-breadcrumbs">
+                  <!-- Section > Document -->
+                </nav>
+                
+                <header class="doc-view-header">
+                  <h1 id="doc-title-view">Document Title</h1>
+                  <div class="doc-meta">
+                    <i data-lucide="calendar"></i> Last updated: <span id="doc-timestamp-view">N/A</span>
+                  </div>
+                </header>
+
+                <!-- Rendered Markdown Body -->
+                <div class="markdown-body" id="doc-markdown-body">
+                  <!-- Rendered markdown goes here -->
+                </div>
+
+                <!-- Previous & Next Navigation Footer -->
+                <footer class="doc-navigation-footer">
+                  <button id="btn-nav-prev" class="nav-arrow-btn">
+                    <i data-lucide="chevron-left"></i>
+                    <div class="nav-lbl">
+                      <span>Previous</span>
+                      <strong id="btn-nav-prev-title">N/A</strong>
+                    </div>
+                  </button>
+                  <button id="btn-nav-next" class="nav-arrow-btn nav-arrow-right">
+                    <div class="nav-lbl">
+                      <span>Next</span>
+                      <strong id="btn-nav-next-title">N/A</strong>
+                    </div>
+                    <i data-lucide="chevron-right"></i>
+                  </button>
+                </footer>
+              </article>
+
+              <!-- Right column: Table of Contents -->
+              <aside id="sidebar-right-toc" class="sidebar-toc">
+                <div class="toc-sticky-wrapper">
+                  <div class="toc-header">
+                    <h4>On this page</h4>
+                  </div>
+                  <nav class="toc-navigation" id="right-toc-list">
+                    <!-- Automatically compiled headings -->
+                  </nav>
+                </div>
+              </aside>
+              
+              <!-- Floating TOC button for Mobile -->
+              <button id="btn-floating-toc" class="floating-action-btn hidden" title="Table of Contents">
+                <i data-lucide="list-collapse"></i>
+              </button>
+            </div>
+          </section>
+
+          <!-- FAQ DISCUSSION BOARD PANE -->
+          <section id="pane-faq-board" class="viewport-pane hidden">
+            <div class="pane-header flex-header">
+              <div>
+                <h2>FAQ Discussion Board</h2>
+                <p>Ask questions and discuss policies with administrators</p>
+              </div>
+              <button id="btn-create-thread" class="btn btn-primary">
+                <i data-lucide="plus-circle"></i> Ask a Question
+              </button>
+            </div>
+
+            <!-- FAQ Layout -->
+            <div class="faq-layout">
+              <!-- Left FAQ: Threads List -->
+              <div class="faq-threads-list-wrapper">
+                <div class="list-filters">
+                  <input type="text" id="faq-thread-search" placeholder="Filter questions...">
+                </div>
+                <div class="faq-threads-list" id="faq-threads-container">
+                  <!-- Populated dynamically -->
+                </div>
+              </div>
+
+              <!-- Right FAQ: Thread Discussion Stream -->
+              <div class="faq-stream-wrapper" id="faq-discussion-stream">
+                <!-- Select a thread placeholder or full thread loaded -->
+                <div class="faq-empty-state" id="faq-stream-empty">
+                  <i data-lucide="message-square"></i>
+                  <h3>Select a discussion</h3>
+                  <p>Choose a thread from the left or create a new one to view replies.</p>
+                </div>
+
+                <div class="faq-active-thread hidden" id="faq-stream-active">
+                  <div class="active-thread-header">
+                    <div class="thread-header-main">
+                      <span id="active-thread-badge" class="badge">Open</span>
+                      <h3 id="active-thread-title">How do I request a safety gear replacement?</h3>
+                    </div>
+                    <div class="thread-header-meta">
+                      Started by <span id="active-thread-author">Worker</span> on <span id="active-thread-date">Date</span>
+                      <div class="thread-admin-controls hidden" id="active-thread-admin-options">
+                        <button class="btn btn-sm btn-secondary" id="btn-admin-resolve-thread">Toggle Resolved</button>
+                        <button class="btn btn-sm btn-outline-danger" id="btn-admin-delete-thread">Delete Thread</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Replies Stream -->
+                  <div class="replies-stream" id="faq-replies-container">
+                    <!-- Replied messages -->
+                  </div>
+
+                  <!-- Reply Box Form -->
+                  <form id="form-faq-reply" class="faq-reply-form">
+                    <div class="form-group">
+                      <textarea id="faq-reply-text" rows="3" required placeholder="Write your response..."></textarea>
+                    </div>
+                    <div class="reply-form-actions">
+                      <button type="submit" class="btn btn-primary">Send Response</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ADMINISTRATOR PORTAL PANES -->
+          <section id="pane-admin-portal" class="viewport-pane hidden">
+            
+            <!-- Admin Navigation Subbar -->
+            <div class="admin-subbar">
+              <h2>Administrator Panel</h2>
+              <div class="tab-buttons">
+                <button class="tab-btn active" data-target="admin-tab-dash">
+                  <i data-lucide="line-chart"></i> Dashboard
+                </button>
+                <button class="tab-btn" data-target="admin-tab-workers">
+                  <i data-lucide="users"></i> Worker Management
+                </button>
+                <button class="tab-btn" data-target="admin-tab-sections">
+                  <i data-lucide="folders"></i> Sections
+                </button>
+                <button class="tab-btn" data-target="admin-tab-documents">
+                  <i data-lucide="file-text"></i> Handbook Documents
+                </button>
+                <button class="tab-btn" data-target="admin-tab-audit">
+                  <i data-lucide="scroll"></i> Audit Logs
+                </button>
+              </div>
+            </div>
+
+            <!-- Tab 1: Dashboard Overview -->
+            <div class="admin-tab-content active" id="admin-tab-dash">
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <div class="stat-icon bg-primary-light text-primary">
+                    <i data-lucide="users"></i>
+                  </div>
+                  <div class="stat-info">
+                    <span class="stat-label">Total Employees</span>
+                    <h3 id="stat-total-workers">0</h3>
+                  </div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-icon bg-success-light text-success">
+                    <i data-lucide="user-check"></i>
+                  </div>
+                  <div class="stat-info">
+                    <span class="stat-label">Active Employees</span>
+                    <h3 id="stat-active-workers">0</h3>
+                  </div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-icon bg-warning-light text-warning">
+                    <i data-lucide="folders"></i>
+                  </div>
+                  <div class="stat-info">
+                    <span class="stat-label">Sections</span>
+                    <h3 id="stat-total-sections">0</h3>
+                  </div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-icon bg-info-light text-info">
+                    <i data-lucide="file-text"></i>
+                  </div>
+                  <div class="stat-info">
+                    <span class="stat-label">Handbook Documents</span>
+                    <h3 id="stat-total-docs">0</h3>
+                  </div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-icon bg-danger-light text-danger">
+                    <i data-lucide="help-circle"></i>
+                  </div>
+                  <div class="stat-info">
+                    <span class="stat-label">Unanswered FAQs</span>
+                    <h3 id="stat-unanswered-faq">0</h3>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Dashboard Details Grid -->
+              <div class="dash-details-grid">
+                <div class="detail-panel">
+                  <div class="panel-header">
+                    <h4>Recent Administrative Action Logs</h4>
+                  </div>
+                  <div class="panel-body">
+                    <ul class="activity-list" id="dash-recent-activity">
+                      <!-- 5 latest logs -->
+                    </ul>
+                  </div>
+                </div>
+                
+                <div class="detail-panel">
+                  <div class="panel-header">
+                    <h4>System Maintenance</h4>
+                  </div>
+                  <div class="panel-body center-flex">
+                    <p class="text-muted">Need to return the system to its initial state or wipe data?</p>
+                    <button class="btn btn-outline-danger" id="btn-admin-reset-db">
+                      <i data-lucide="rotate-ccw"></i> Reset Database to Default Seeds
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab 2: Worker Management -->
+            <div class="admin-tab-content hidden" id="admin-tab-workers">
+              <div class="panel-action-bar">
+                <input type="text" id="admin-worker-search" placeholder="Search employees by ID, name, or dept...">
+                <button class="btn btn-primary" id="btn-admin-add-worker">
+                  <i data-lucide="user-plus"></i> Register Employee
+                </button>
+              </div>
+              <div class="table-wrapper">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Employee ID</th>
+                      <th>Full Name</th>
+                      <th>Email</th>
+                      <th>Department</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-workers-table-body">
+                    <!-- Dynamic user rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Tab 3: Section Management -->
+            <div class="admin-tab-content hidden" id="admin-tab-sections">
+              <div class="section-layout">
+                <!-- Section List / Sort Control -->
+                <div class="section-list-card">
+                  <div class="card-header">
+                    <h4>Reorder & Edit Sections</h4>
+                    <p class="text-muted">Drag or use arrows to adjust sidebar display sequence. FAQ is always locked to last.</p>
+                  </div>
+                  <div class="section-list-container" id="admin-sections-list-body">
+                    <!-- Dynamic sections list -->
+                  </div>
+                </div>
+
+                <!-- Create/Edit Section Form -->
+                <div class="section-form-card">
+                  <h4 id="admin-section-form-title">Create New Section</h4>
+                  <form id="form-admin-section">
+                    <input type="hidden" id="admin-section-id">
+                    <div class="form-group">
+                      <label for="admin-section-title">Section Name</label>
+                      <input type="text" id="admin-section-title" required placeholder="e.g., Quality Control">
+                    </div>
+                    <div class="form-actions">
+                      <button type="button" id="btn-admin-cancel-section" class="btn btn-secondary hidden">Cancel Edit</button>
+                      <button type="submit" class="btn btn-primary">Save Section</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab 4: Handbook Document Management -->
+            <div class="admin-tab-content hidden" id="admin-tab-documents">
+              <div class="doc-management-layout">
+                
+                <!-- Left Sidebar: Selection & re-ordering docs -->
+                <div class="doc-sidebar-panel">
+                  <div class="form-group">
+                    <label for="admin-doc-select-section">Select Section</label>
+                    <select id="admin-doc-select-section" class="form-select">
+                      <!-- Dropdown options -->
+                    </select>
+                  </div>
+                  
+                  <div class="panel-header">
+                    <h5>Documents</h5>
+                    <button class="btn btn-sm btn-primary" id="btn-admin-new-doc">
+                      <i data-lucide="plus"></i> New Doc
+                    </button>
+                  </div>
+                  
+                  <ul class="admin-doc-list" id="admin-docs-list-body">
+                    <!-- List of documents in selected section -->
+                  </ul>
+                </div>
+
+                <!-- Right Work Area: Document Composer & Editor -->
+                <div class="doc-editor-panel" id="admin-doc-editor-panel">
+                  
+                  <!-- Empty Editor State -->
+                  <div class="faq-empty-state" id="admin-doc-empty">
+                    <i data-lucide="file-edit"></i>
+                    <h3>No Document Selected</h3>
+                    <p>Select a document from the left or click "New Doc" to begin editing.</p>
+                  </div>
+
+                  <!-- Editor Form -->
+                  <form id="form-admin-doc" class="doc-editor-form hidden">
+                    <input type="hidden" id="admin-doc-id">
+                    
+                    <div class="editor-header-fields">
+                      <div class="form-group">
+                        <label for="admin-doc-title">Document Title</label>
+                        <input type="text" id="admin-doc-title" required placeholder="e.g., PPE Guidelines">
+                      </div>
+                      
+                      <div class="form-group">
+                        <label for="admin-doc-section">Move to Section</label>
+                        <select id="admin-doc-section" class="form-select"></select>
+                      </div>
+                    </div>
+
+                    <!-- Upload and Editor Body -->
+                    <div class="editor-body-controls">
+                      <div class="upload-control">
+                        <label class="btn btn-sm btn-secondary file-input-label">
+                          <i data-lucide="upload-cloud"></i> Upload Markdown File
+                          <input type="file" id="admin-doc-file-upload" accept=".md" class="hidden">
+                        </label>
+                        <span class="text-muted" id="upload-filename">Only .md files accepted</span>
+                      </div>
+                      
+                      <div class="editor-tabs">
+                        <button type="button" class="editor-tab-btn active" data-mode="write">Edit Markdown</button>
+                        <button type="button" class="editor-tab-btn" data-mode="preview" id="btn-admin-doc-preview">Live Preview</button>
+                      </div>
+                    </div>
+
+                    <!-- Write Area -->
+                    <div class="form-group editor-textarea-wrapper" id="editor-write-area">
+                      <textarea id="admin-doc-markdown" required placeholder="Write your document content here in Markdown format..."></textarea>
+                    </div>
+
+                    <!-- Live Preview Area -->
+                    <div class="markdown-body editor-preview-area hidden" id="editor-preview-area">
+                      <!-- Rendered Preview goes here -->
+                    </div>
+
+                    <div class="form-actions editor-footer">
+                      <button type="button" class="btn btn-outline-danger" id="btn-admin-delete-doc">Delete Document</button>
+                      <button type="submit" class="btn btn-success">
+                        <i data-lucide="save"></i> Publish Changes
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab 5: Audit Logs -->
+            <div class="admin-tab-content hidden" id="admin-tab-audit">
+              <div class="panel-header">
+                <h4>System Security Audit Logs</h4>
+                <button class="btn btn-sm btn-outline-secondary" id="btn-admin-refresh-audit">
+                  <i data-lucide="refresh-cw"></i> Refresh Logs
+                </button>
+              </div>
+              <div class="table-wrapper mt-3">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Timestamp</th>
+                      <th>User</th>
+                      <th>Action Performed</th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-audit-table-body">
+                    <!-- Dynamic audit logs -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+        </main>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= MODAL DIALOGS ================= -->
+
+  <!-- Worker Registration / Edit Modal -->
+  <div class="modal-overlay hidden" id="modal-worker-crud">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="worker-modal-title">Register Employee</h3>
+        <button class="icon-btn btn-close-modal"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-worker-crud">
+        <input type="hidden" id="crud-mode" value="create">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="crud-worker-id">Employee ID</label>
+              <input type="text" id="crud-worker-id" required placeholder="e.g., WRK042">
+            </div>
+            <div class="form-group">
+              <label for="crud-worker-name">Full Name</label>
+              <input type="text" id="crud-worker-name" required placeholder="e.g., Sarah Connor">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="crud-worker-email">Email Address</label>
+            <input type="email" id="crud-worker-email" required placeholder="name@company.com">
+          </div>
+          <div class="form-group" id="crud-password-group">
+            <label for="crud-worker-password">Password</label>
+            <input type="password" id="crud-worker-password" placeholder="Min 6 characters">
+            <p class="text-muted text-sm mt-1" id="crud-password-help">Leave empty if you don't want to change</p>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="crud-worker-dept">Department</label>
+              <select id="crud-worker-dept" class="form-select">
+                <option value="Production">Production</option>
+                <option value="Warehouse">Warehouse</option>
+                <option value="Logistics">Logistics</option>
+                <option value="HR">HR</option>
+                <option value="Operations">Operations</option>
+                <option value="Maintenance">Maintenance</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="crud-worker-role">System Role</label>
+              <select id="crud-worker-role" class="form-select">
+                <option value="Worker">Worker</option>
+                <option value="Administrator">Administrator</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" id="crud-status-group">
+            <label for="crud-worker-status">Account Status</label>
+            <select id="crud-worker-status" class="form-select">
+              <option value="Active">Active</option>
+              <option value="Disabled">Disabled</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-close-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Employee</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Reset Password Modal (Admin) -->
+  <div class="modal-overlay hidden" id="modal-worker-reset-pwd">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Reset Employee Password</h3>
+        <button class="icon-btn btn-close-modal"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-admin-reset-pwd">
+        <input type="hidden" id="reset-pwd-employee-id">
+        <div class="modal-body">
+          <p>Set a new password for <strong id="reset-pwd-worker-name">John Doe</strong>:</p>
+          <div class="form-group mt-3">
+            <label for="reset-pwd-new-val">New Password</label>
+            <input type="password" id="reset-pwd-new-val" required placeholder="Min 6 characters">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-close-modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">Reset Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create FAQ Thread Modal -->
+  <div class="modal-overlay hidden" id="modal-faq-thread">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Ask a Question</h3>
+        <button class="icon-btn btn-close-modal"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-faq-thread-create">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="faq-thread-title-input">What is your question or topic?</label>
+            <input type="text" id="faq-thread-title-input" required placeholder="e.g., Safety goggles replacement time limit?">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-close-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Discussion</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App Script -->
+  <script type="module" src="app.js?v=2"></script>
+</body>
+</html>

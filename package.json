@@ -1,0 +1,19 @@
+{
+  "name": "mr-handbook-manager",
+  "version": "1.0.0",
+  "description": "Secure, real-time internal web application for company handbooks and SOPs, integrated with Supabase.",
+  "main": "app.js",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "dev": "python -m http.server 8000"
+  },
+  "keywords": [
+    "handbook",
+    "sop",
+    "manager",
+    "supabase",
+    "postgres"
+  ],
+  "author": "MR Manufacturing",
+  "license": "ISC"
+}

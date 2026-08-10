@@ -1,0 +1,26 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+web_folders/
+
+# IDE / Editor configuration
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# App / Gemini system metadata
+.gemini/
+.system_generated/
+appDataDir/
+brain/
+scratch/
+
+# Operating system files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
