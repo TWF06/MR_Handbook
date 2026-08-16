@@ -210,7 +210,7 @@ Record the incoming inventory in our system within 2 hours of arrival:
   ],
   "timestamp": "2026-08-08T08:00:00Z"
 }
-\`\`\`\`
+\`\`\``
   },
   {
     id: "doc-4-1",
