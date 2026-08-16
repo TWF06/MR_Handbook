@@ -1,4 +1,4 @@
-import * as DB from './db.js?v=3';
+import * as DB from './db.js?v=4';
 
 // ==========================================================================
 // STATE MANAGEMENT & ROUTING
@@ -31,7 +31,12 @@ function populateRolesDropdown(deptVal, selectedRoleVal = null) {
   if (!roleSelect) return;
   roleSelect.innerHTML = '';
   const roles = DEPT_ROLES[deptVal] || [];
-  roles.forEach(role => {
+  const allowedRoles = roles.filter(role => {
+    if (!currentSession) return false;
+    return DB.canManageUser(currentSession.role, role);
+  });
+  
+  allowedRoles.forEach(role => {
     const opt = document.createElement('option');
     opt.value = role;
     opt.textContent = role;
@@ -1138,8 +1143,12 @@ async function loadWorkerManagementTable() {
     filtered.forEach(u => {
       const tr = document.createElement('tr');
       
-      const badgeRoleClass = u.role === 'Administrator' ? 'badge-admin' : 'badge-worker';
+      let badgeRoleClass = 'badge-worker';
+      if (['Director', 'HR', 'Administrative'].includes(u.role) || ['BOH Manager', 'FOH Manager'].includes(u.role)) {
+        badgeRoleClass = 'badge-admin';
+      }
       const badgeStatusClass = u.status === 'Active' ? 'badge-active' : 'badge-disabled';
+      const canManage = DB.canManageUser(currentSession.role, u.role);
       
       tr.innerHTML = `
         <td><strong>${u.employeeId}</strong></td>
@@ -1150,14 +1159,14 @@ async function loadWorkerManagementTable() {
         <td><span class="badge ${badgeStatusClass}">${u.status}</span></td>
         <td>
           <div class="table-actions">
-            <button class="btn btn-sm btn-secondary btn-edit-worker" data-id="${u.employeeId}" title="Edit Profile">
+            <button class="btn btn-sm btn-secondary btn-edit-worker" data-id="${u.employeeId}" title="${canManage ? 'Edit Profile' : 'Insufficient Authorization'}" ${!canManage ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
               <i data-lucide="edit-3"></i> Edit
             </button>
-            <button class="btn btn-sm btn-secondary btn-reset-worker-pwd" data-id="${u.employeeId}" title="Reset Password">
+            <button class="btn btn-sm btn-secondary btn-reset-worker-pwd" data-id="${u.employeeId}" title="${canManage ? 'Reset Password' : 'Insufficient Authorization'}" ${!canManage ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
               <i data-lucide="key-round"></i> Pass
             </button>
             ${u.employeeId !== currentSession.employeeId ? `
-              <button class="btn btn-sm btn-outline-danger btn-delete-worker" data-id="${u.employeeId}" title="Delete User">
+              <button class="btn btn-sm btn-outline-danger btn-delete-worker" data-id="${u.employeeId}" title="${canManage ? 'Delete User' : 'Insufficient Authorization'}" ${!canManage ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
                 <i data-lucide="trash-2"></i> Delete
               </button>
             ` : ''}

@@ -55,6 +55,31 @@ export const MANAGEMENT_ROLES = [
   'Director', 'HR', 'Administrative'
 ];
 
+export const ROLE_HIERARCHY = {
+  'Director': 4,
+  'HR': 3,
+  'Administrative': 2,
+  'BOH Manager': 1,
+  'FOH Manager': 1,
+  'CDP': 0,
+  'SOUS': 0,
+  'BOH Crew': 0,
+  'Waiter': 0,
+  'Barista': 0
+};
+
+export function getRoleLevel(role) {
+  return ROLE_HIERARCHY[role] || 0;
+}
+
+export function canManageUser(managerRole, targetRole) {
+  const mLevel = getRoleLevel(managerRole);
+  const tLevel = getRoleLevel(targetRole);
+  
+  if (managerRole === 'Director') return true; // Director has highest authorization
+  return mLevel > tLevel;
+}
+
 // Seed data definition inside db.js to support database resets
 const SEED_USERS = [
   { employee_id: "ADM001", name: "Alex Vance", email: "admin@company.com", password: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", department: "Management", role: "Director", status: "Active" },
@@ -465,6 +490,11 @@ export async function registerWorker(workerData) {
     throw new Error("All fields are required.");
   }
   
+  // Hierarchy Check
+  if (!canManageUser(admin.role, role)) {
+    throw new Error(`Unauthorized: You do not have permission to register a worker with role "${role}".`);
+  }
+  
   const hashedPassword = await hashPassword(password);
   const newUser = {
     employee_id: employeeId.toUpperCase().trim(),
@@ -490,6 +520,25 @@ export async function registerWorker(workerData) {
 
 export async function editWorker(employeeId, updatedData) {
   const admin = await authorize(MANAGER_ROLES);
+  
+  // Fetch target user's current role
+  const { data: targetUser, error: fetchErr } = await supabase
+    .from('users')
+    .select('role')
+    .eq('employee_id', employeeId)
+    .single();
+    
+  if (fetchErr || !targetUser) throw new Error("Target employee profile not found.");
+  
+  // Hierarchy check on current level
+  if (!canManageUser(admin.role, targetUser.role)) {
+    throw new Error("Unauthorized: You do not have permission to edit this level of employee.");
+  }
+  
+  // Hierarchy check on new level (prevent illegal promotions)
+  if (!canManageUser(admin.role, updatedData.role)) {
+    throw new Error(`Unauthorized: You cannot assign a role level ("${updatedData.role}") higher than or equal to your own.`);
+  }
   
   const updatePayload = {
     name: updatedData.name?.trim(),
@@ -523,23 +572,45 @@ export async function removeWorker(employeeId) {
   const admin = await authorize(MANAGER_ROLES);
   if (employeeId === admin.employeeId) throw new Error("You cannot delete your own account.");
   
-  const { data: user } = await supabase.from('users').select('name').eq('employee_id', employeeId).single();
-  const name = user ? user.name : "Unknown User";
+  // Fetch target user's current role
+  const { data: targetUser, error: fetchErr } = await supabase
+    .from('users')
+    .select('name, role')
+    .eq('employee_id', employeeId)
+    .single();
+    
+  if (fetchErr || !targetUser) throw new Error("Target employee profile not found.");
+  
+  // Hierarchy check
+  if (!canManageUser(admin.role, targetUser.role)) {
+    throw new Error("Unauthorized: You do not have permission to remove this level of employee.");
+  }
   
   const { error } = await supabase.from('users').delete().eq('employee_id', employeeId);
   if (error) throw new Error(error.message);
   
-  await writeAuditLog(admin.employeeId, `Removed user: ${name} (${employeeId})`);
+  await writeAuditLog(admin.employeeId, `Removed user: ${targetUser.name} (${employeeId})`);
 }
 
 export async function adminResetPassword(employeeId, newPassword) {
   const admin = await authorize(MANAGER_ROLES);
   if (newPassword.length < 6) throw new Error("Password must be at least 6 characters.");
   
-  const hashedPassword = await hashPassword(newPassword);
+  // Fetch target user's current role
+  const { data: targetUser, error: fetchErr } = await supabase
+    .from('users')
+    .select('name, role')
+    .eq('employee_id', employeeId)
+    .single();
+    
+  if (fetchErr || !targetUser) throw new Error("Target employee profile not found.");
   
-  const { data: user } = await supabase.from('users').select('name').eq('employee_id', employeeId).single();
-  const name = user ? user.name : "Unknown User";
+  // Hierarchy check
+  if (!canManageUser(admin.role, targetUser.role)) {
+    throw new Error("Unauthorized: You do not have permission to reset password for this level of employee.");
+  }
+  
+  const hashedPassword = await hashPassword(newPassword);
   
   const { error } = await supabase
     .from('users')
@@ -548,7 +619,7 @@ export async function adminResetPassword(employeeId, newPassword) {
   
   if (error) throw new Error(error.message);
   
-  await writeAuditLog(admin.employeeId, `Reset password for user: ${name} (${employeeId})`);
+  await writeAuditLog(admin.employeeId, `Reset password for user: ${targetUser.name} (${employeeId})`);
 }
 
 export async function getUsers() {
