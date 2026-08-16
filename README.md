@@ -68,7 +68,21 @@ To run the application locally:
 
 ---
 
-## 5. Seed Accounts (Default Logins)
+## 5. Vercel Deployment
+
+To deploy the application to Vercel:
+1. Connect your repository to **Vercel**.
+2. Add the following **Environment Variables** in the Vercel Dashboard project settings:
+   *   `SUPABASE_URL`: Your Supabase Project URL.
+   *   `SUPABASE_ANON_KEY`: Your Supabase public anonymous API key.
+3. Verify that the build and deployment settings are set to:
+   *   **Build Command**: `npm run build` (executes the dynamic injection script `inject-env.js`).
+   *   **Output Directory**: `.` (pre-configured in `vercel.json`).
+4. Trigger a deployment. The build process will automatically bake the environment variables into the static frontend scripts.
+
+---
+
+## 6. Seed Accounts (Default Logins)
 
 | User Role | Email | Password | Full Name | Status |
 | :--- | :--- | :--- | :--- | :--- |
