@@ -200,7 +200,7 @@ Record the incoming inventory in our system within 2 hours of arrival:
 3. Scan the barcode on the receiving label.
 4. If a item is damaged, take a photo and upload it immediately to the portal under 'Damaged Deliveries'.
 
-```javascript
+\`\`\`javascript
 // Example API Payload for Inbound Shipments
 {
   "purchaseOrderId": "PO-2026-9812",
@@ -210,7 +210,7 @@ Record the incoming inventory in our system within 2 hours of arrival:
   ],
   "timestamp": "2026-08-08T08:00:00Z"
 }
-````
+\`\`\`
   },
   {
     id: "doc-4-1",
