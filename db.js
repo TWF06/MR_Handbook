@@ -11,19 +11,37 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Seed data definition inside db.js to support database resets
+// Role permission groups for security routing and validation
+export const ALL_ROLES = [
+  'Director', 'HR', 'Administrative',
+  'BOH Manager', 'CDP', 'SOUS', 'BOH Crew',
+  'FOH Manager', 'Waiter', 'Barista'
+];
+export const MANAGER_ROLES = [
+  'Director', 'HR', 'Administrative',
+  'BOH Manager', 'FOH Manager'
+];
+export const MANAGEMENT_ROLES = [
+  'Director', 'HR', 'Administrative'
+];
+
+// Seed data definition inside db.js to support database resets
 const SEED_USERS = [
-  { employee_id: "ADM001", name: "Alex Vance", email: "admin@company.com", password: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", department: "Operations", role: "Administrator", status: "Active" },
-  { employee_id: "WRK001", name: "John Doe", email: "worker1@company.com", password: "312bba6ac1c4274943d7d3c1f346e8e27310c731e407ce5592d82f0d101fbff1", department: "Production", role: "Worker", status: "Active" },
-  { employee_id: "WRK002", name: "Jane Smith", email: "worker2@company.com", password: "312bba6ac1c4274943d7d3c1f346e8e27310c731e407ce5592d82f0d101fbff1", department: "Warehouse", role: "Worker", status: "Active" },
-  { employee_id: "WRK003", name: "Bob Johnson", email: "disabled@company.com", password: "dde79399fb85ad1dfbaec103d360520c2590f9106832d830dff673eae18c39d9", department: "Logistics", role: "Worker", status: "Disabled" }
+  { employee_id: "ADM001", name: "Alex Vance", email: "admin@company.com", password: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", department: "Management", role: "Director", status: "Active" },
+  { employee_id: "ADM002", name: "Sarah Connor", email: "hr@company.com", password: "96924614e866b96e49a88eb82f1b72e59e99a80e1c312781b0a8809c9dfd3d4b", department: "Management", role: "HR", status: "Active" },
+  { employee_id: "WRK001", name: "John Doe", email: "worker1@company.com", password: "312bba6ac1c4274943d7d3c1f346e8e27310c731e407ce5592d82f0d101fbff1", department: "BOH", role: "BOH Manager", status: "Active" },
+  { employee_id: "WRK002", name: "Jane Smith", email: "worker2@company.com", password: "312bba6ac1c4274943d7d3c1f346e8e27310c731e407ce5592d82f0d101fbff1", department: "FOH", role: "Waiter", status: "Active" },
+  { employee_id: "WRK003", name: "Bob Johnson", email: "disabled@company.com", password: "dde79399fb85ad1dfbaec103d360520c2590f9106832d830dff673eae18c39d9", department: "BOH", role: "BOH Crew", status: "Disabled" },
+  { employee_id: "WRK004", name: "David Miller", email: "foh@company.com", password: "38933b4998069e2b6947ec3a0c5c4d63cd7650fa9b3dfbd9db0995c6a3e5d38a", department: "FOH", role: "FOH Manager", status: "Active" }
 ];
 
 const SEED_SECTIONS = [
-  { id: "sec-1", title: "Company Introduction", order_num: 1 },
-  { id: "sec-2", title: "Safety Guidelines", order_num: 2 },
-  { id: "sec-3", title: "Warehouse Procedures", order_num: 3 },
-  { id: "sec-4", title: "HR Policies", order_num: 4 },
-  { id: "sec-5", title: "Emergency Procedures", order_num: 5 }
+  { id: "sec-1", title: "Company Introduction", order_num: 1, target_category: "Both" },
+  { id: "sec-2", title: "Safety Guidelines", order_num: 2, target_category: "Both" },
+  { id: "sec-3", title: "Warehouse Procedures", order_num: 3, target_category: "BOH" },
+  { id: "sec-4", title: "HR Policies", order_num: 4, target_category: "Both" },
+  { id: "sec-5", title: "Emergency Procedures", order_num: 5, target_category: "Both" },
+  { id: "sec-6", title: "FOH Operations", order_num: 6, target_category: "FOH" }
 ];
 
 const SEED_DOCUMENTS = [
@@ -152,7 +170,7 @@ Record the incoming inventory in our system within 2 hours of arrival:
 3. Scan the barcode on the receiving label.
 4. If a item is damaged, take a photo and upload it immediately to the portal under 'Damaged Deliveries'.
 
-\`\`\`javascript
+```javascript
 // Example API Payload for Inbound Shipments
 {
   "purchaseOrderId": "PO-2026-9812",
@@ -162,7 +180,7 @@ Record the incoming inventory in our system within 2 hours of arrival:
   ],
   "timestamp": "2026-08-08T08:00:00Z"
 }
-\`\`\``
+````
   },
   {
     id: "doc-4-1",
@@ -200,9 +218,27 @@ In the event of an evacuation alarm (continuous high-pitched horn), follow these
 2. Leave personal belongings behind.
 3. Evacuate the building via the nearest marked green exit door.
 4. **Do not run or push.** Walk calmly and quickly.
-5. Assembly Point A (Main Car Park) or Assembly Point B (Rear Field) as instructed.
+5. Assemble at **Assembly Point A** (Main Car Park) or **Assembly Point B** (Rear Field) as instructed.
+
+## Assembly Point Map Ref
+- **North/East Wings:** Main Car Park (Point A)
+- **South/West Wings:** Rear Field (Point B)
 
 *Do not re-enter the building until the Safety Officer declares it is safe to do so.*`
+  },
+  {
+    id: "doc-6-1",
+    section_id: "sec-6",
+    title: "Customer Service Standards",
+    order_num: 1,
+    content: `# Customer Service Standards
+
+Welcome to our front-of-house team! Outstanding service is key to our success.
+
+## General Guidelines
+- **Greeting:** Greet every customer with a warm smile and eye contact within 10 seconds of arrival.
+- **Attitude:** Maintain a helpful and polite posture at all times.
+- **Service Timing:** Keep table check-ins consistent. Check back on meals within 2 minutes of serving.`
   }
 ];
 
@@ -392,7 +428,7 @@ export async function resetPasswordWithSecurityCheck(email, employeeId, newPassw
 
 // ================= WORKER MANAGEMENT (ADMIN ONLY) =================
 export async function registerWorker(workerData) {
-  const admin = await authorize(['Administrator']);
+  const admin = await authorize(MANAGER_ROLES);
   
   const { employeeId, name, email, password, department, role } = workerData;
   if (!employeeId || !name || !email || !password || !department || !role) {
@@ -423,7 +459,7 @@ export async function registerWorker(workerData) {
 }
 
 export async function editWorker(employeeId, updatedData) {
-  const admin = await authorize(['Administrator']);
+  const admin = await authorize(MANAGER_ROLES);
   
   const updatePayload = {
     name: updatedData.name?.trim(),
@@ -454,7 +490,7 @@ export async function editWorker(employeeId, updatedData) {
 }
 
 export async function removeWorker(employeeId) {
-  const admin = await authorize(['Administrator']);
+  const admin = await authorize(MANAGER_ROLES);
   if (employeeId === admin.employeeId) throw new Error("You cannot delete your own account.");
   
   const { data: user } = await supabase.from('users').select('name').eq('employee_id', employeeId).single();
@@ -467,7 +503,7 @@ export async function removeWorker(employeeId) {
 }
 
 export async function adminResetPassword(employeeId, newPassword) {
-  const admin = await authorize(['Administrator']);
+  const admin = await authorize(MANAGER_ROLES);
   if (newPassword.length < 6) throw new Error("Password must be at least 6 characters.");
   
   const hashedPassword = await hashPassword(newPassword);
@@ -486,7 +522,7 @@ export async function adminResetPassword(employeeId, newPassword) {
 }
 
 export async function getUsers() {
-  await authorize(['Administrator']);
+  await authorize(MANAGER_ROLES);
   const { data, error } = await supabase.from('users').select('*').order('employee_id');
   if (error) throw new Error(error.message);
   
@@ -502,36 +538,42 @@ export async function getUsers() {
 
 // ================= SECTION MANAGEMENT (ADMIN ONLY CRUD / WORKER READ) =================
 export async function getSections() {
-  await authorize(['Administrator', 'Worker']);
+  await authorize(ALL_ROLES);
   const { data, error } = await supabase.from('sections').select('*').order('order_num');
   if (error) throw new Error(error.message);
   
   return data.map(s => ({
     id: s.id,
     title: s.title,
-    order: s.order_num
+    order: s.order_num,
+    targetCategory: s.target_category || 'Both'
   }));
 }
 
 export async function saveSection(sectionData) {
-  const admin = await authorize(['Administrator']);
+  const admin = await authorize(MANAGEMENT_ROLES);
   
   if (!sectionData.title || !sectionData.title.trim()) {
     throw new Error("Section title is required.");
   }
   
+  const targetCategory = sectionData.targetCategory || 'Both';
+  
   if (sectionData.id) {
     // Update
     const { data, error } = await supabase
       .from('sections')
-      .update({ title: sectionData.title.trim() })
+      .update({ 
+        title: sectionData.title.trim(),
+        target_category: targetCategory
+      })
       .eq('id', sectionData.id)
       .select()
       .single();
       
     if (error) throw new Error(error.message);
-    await writeAuditLog(admin.employeeId, `Renamed section to: "${sectionData.title}"`);
-    return { id: data.id, title: data.title, order: data.order_num };
+    await writeAuditLog(admin.employeeId, `Renamed section to: "${sectionData.title}" (Target: ${targetCategory})`);
+    return { id: data.id, title: data.title, order: data.order_num, targetCategory: data.target_category };
   } else {
     // Create
     const { data: sections } = await supabase.from('sections').select('order_num');
@@ -540,19 +582,20 @@ export async function saveSection(sectionData) {
     const newSection = {
       id: `sec-${Date.now()}`,
       title: sectionData.title.trim(),
-      order_num: maxOrder + 1
+      order_num: maxOrder + 1,
+      target_category: targetCategory
     };
     
     const { error } = await supabase.from('sections').insert([newSection]);
     if (error) throw new Error(error.message);
     
-    await writeAuditLog(admin.employeeId, `Created section: "${newSection.title}"`);
-    return { id: newSection.id, title: newSection.title, order: newSection.order_num };
+    await writeAuditLog(admin.employeeId, `Created section: "${newSection.title}" (Target: ${newSection.target_category})`);
+    return { id: newSection.id, title: newSection.title, order: newSection.order_num, targetCategory: newSection.target_category };
   }
 }
 
 export async function deleteSection(sectionId) {
-  const admin = await authorize(['Administrator']);
+  const admin = await authorize(MANAGEMENT_ROLES);
   
   const { data: sec } = await supabase.from('sections').select('title').eq('id', sectionId).single();
   const title = sec ? sec.title : "Unknown Section";
@@ -564,7 +607,7 @@ export async function deleteSection(sectionId) {
 }
 
 export async function reorderSections(sectionIds) {
-  const admin = await authorize(['Administrator']);
+  const admin = await authorize(MANAGEMENT_ROLES);
   
   for (let i = 0; i < sectionIds.length; i++) {
     const { error } = await supabase
@@ -579,7 +622,7 @@ export async function reorderSections(sectionIds) {
 
 // ================= HANDBOOK DOCUMENT MANAGEMENT =================
 export async function getDocuments(sectionId = null) {
-  await authorize(['Administrator', 'Worker']);
+  await authorize(ALL_ROLES);
   
   let query = supabase.from('documents').select('*').order('order_num');
   if (sectionId) {
@@ -600,7 +643,7 @@ export async function getDocuments(sectionId = null) {
 }
 
 export async function getDocumentById(docId) {
-  await authorize(['Administrator', 'Worker']);
+  await authorize(ALL_ROLES);
   const { data, error } = await supabase.from('documents').select('*').eq('id', docId).single();
   if (error || !data) return null;
   
@@ -615,7 +658,7 @@ export async function getDocumentById(docId) {
 }
 
 export async function saveDocument(docData) {
-  const admin = await authorize(['Administrator']);
+  const admin = await authorize(MANAGEMENT_ROLES);
   
   if (!docData.title || !docData.title.trim()) throw new Error("Document title is required.");
   if (!docData.sectionId) throw new Error("Section assignment is required.");
@@ -677,7 +720,7 @@ export async function saveDocument(docData) {
 }
 
 export async function reorderDocuments(sectionId, documentIds) {
-  const admin = await authorize(['Administrator']);
+  const admin = await authorize(MANAGEMENT_ROLES);
   
   for (let i = 0; i < documentIds.length; i++) {
     const { error } = await supabase
@@ -692,7 +735,7 @@ export async function reorderDocuments(sectionId, documentIds) {
 }
 
 export async function deleteDocument(docId) {
-  const admin = await authorize(['Administrator']);
+  const admin = await authorize(MANAGEMENT_ROLES);
   const { data: doc } = await supabase.from('documents').select('title').eq('id', docId).single();
   const title = doc ? doc.title : "Unknown Document";
   
@@ -704,7 +747,7 @@ export async function deleteDocument(docId) {
 
 // ================= FAQ INTERACTIVE DISCUSSION BOARD =================
 export async function getFAQThreads() {
-  await authorize(['Administrator', 'Worker']);
+  await authorize(ALL_ROLES);
   const { data, error } = await supabase.from('faq_threads').select('*');
   if (error) throw new Error(error.message);
   
@@ -725,7 +768,7 @@ export async function getFAQThreads() {
 }
 
 export async function getFAQReplies(threadId) {
-  await authorize(['Administrator', 'Worker']);
+  await authorize(ALL_ROLES);
   const { data, error } = await supabase
     .from('faq_replies')
     .select('*')
@@ -745,7 +788,7 @@ export async function getFAQReplies(threadId) {
 }
 
 export async function createFAQThread(title) {
-  const user = await authorize(['Administrator', 'Worker']);
+  const user = await authorize(ALL_ROLES);
   if (!title || !title.trim()) throw new Error("Thread title cannot be empty.");
   
   const newThread = {
@@ -774,13 +817,13 @@ export async function createFAQThread(title) {
 }
 
 export async function replyToFAQThread(threadId, content) {
-  const user = await authorize(['Administrator', 'Worker']);
+  const user = await authorize(ALL_ROLES);
   if (!content || !content.trim()) throw new Error("Reply content cannot be empty.");
   
   const { data: thread } = await supabase.from('faq_threads').select('title').eq('id', threadId).single();
   const title = thread ? thread.title : "Unknown Thread";
   
-  const authorSuffix = user.role === 'Administrator' ? ' (Admin)' : '';
+  const authorSuffix = MANAGER_ROLES.includes(user.role) ? ' (Admin)' : '';
   const newReply = {
     id: `rep-${Date.now()}`,
     thread_id: threadId,
@@ -805,7 +848,7 @@ export async function replyToFAQThread(threadId, content) {
 }
 
 export async function toggleFAQThreadResolved(threadId) {
-  const user = await authorize(['Administrator']);
+  const user = await authorize(MANAGER_ROLES);
   const { data: thread, error: getErr } = await supabase.from('faq_threads').select('*').eq('id', threadId).single();
   if (getErr || !thread) throw new Error("FAQ thread not found.");
   
@@ -831,7 +874,7 @@ export async function toggleFAQThreadResolved(threadId) {
 }
 
 export async function pinFAQReply(threadId, replyId) {
-  const user = await authorize(['Administrator']);
+  const user = await authorize(MANAGER_ROLES);
   
   const { data: thread, error: getErr } = await supabase.from('faq_threads').select('*').eq('id', threadId).single();
   if (getErr || !thread) throw new Error("FAQ thread not found.");
@@ -846,7 +889,7 @@ export async function pinFAQReply(threadId, replyId) {
 }
 
 export async function deleteFAQThread(threadId) {
-  const user = await authorize(['Administrator']);
+  const user = await authorize(MANAGER_ROLES);
   const { data: thread } = await supabase.from('faq_threads').select('title').eq('id', threadId).single();
   const title = thread ? thread.title : "Unknown Thread";
   
@@ -857,7 +900,7 @@ export async function deleteFAQThread(threadId) {
 }
 
 export async function deleteFAQReply(replyId) {
-  const user = await authorize(['Administrator']);
+  const user = await authorize(MANAGER_ROLES);
   
   const { data: reply } = await supabase.from('faq_replies').select('thread_id').eq('id', replyId).single();
   if (!reply) throw new Error("Reply not found.");
@@ -876,7 +919,7 @@ export async function deleteFAQReply(replyId) {
 
 // ================= AUDIT LOGS (ADMIN ONLY) =================
 export async function getAuditLogs() {
-  await authorize(['Administrator']);
+  await authorize(MANAGER_ROLES);
   const { data, error } = await supabase.from('audit_logs').select('*').order('timestamp', { ascending: false });
   if (error) throw new Error(error.message);
   

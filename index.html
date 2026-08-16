@@ -463,6 +463,14 @@
                       <label for="admin-section-title">Section Name</label>
                       <input type="text" id="admin-section-title" required placeholder="e.g., Quality Control">
                     </div>
+                    <div class="form-group mt-2">
+                      <label for="admin-section-target">Target Category</label>
+                      <select id="admin-section-target" class="form-select">
+                        <option value="Both">Both (General)</option>
+                        <option value="BOH">BOH (Back of House)</option>
+                        <option value="FOH">FOH (Front of House)</option>
+                      </select>
+                    </div>
                     <div class="form-actions">
                       <button type="button" id="btn-admin-cancel-section" class="btn btn-secondary hidden">Cancel Edit</button>
                       <button type="submit" class="btn btn-primary">Save Section</button>
@@ -626,19 +634,15 @@
             <div class="form-group">
               <label for="crud-worker-dept">Department</label>
               <select id="crud-worker-dept" class="form-select">
-                <option value="Production">Production</option>
-                <option value="Warehouse">Warehouse</option>
-                <option value="Logistics">Logistics</option>
-                <option value="HR">HR</option>
-                <option value="Operations">Operations</option>
-                <option value="Maintenance">Maintenance</option>
+                <option value="Management">Management</option>
+                <option value="BOH">BOH</option>
+                <option value="FOH">FOH</option>
               </select>
             </div>
             <div class="form-group">
               <label for="crud-worker-role">System Role</label>
               <select id="crud-worker-role" class="form-select">
-                <option value="Worker">Worker</option>
-                <option value="Administrator">Administrator</option>
+                <!-- Dynamically populated in app.js -->
               </select>
             </div>
           </div>

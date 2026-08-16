@@ -27,7 +27,8 @@ ALTER TABLE users DISABLE ROW LEVEL SECURITY;
 CREATE TABLE sections (
     id VARCHAR(50) PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    order_num INTEGER NOT NULL
+    order_num INTEGER NOT NULL,
+    target_category VARCHAR(50) DEFAULT 'Both' NOT NULL -- 'BOH', 'FOH', or 'Both'
 );
 ALTER TABLE sections DISABLE ROW LEVEL SECURITY;
 
@@ -79,20 +80,23 @@ ALTER TABLE audit_logs DISABLE ROW LEVEL SECURITY;
 -- SEED DATA INSERTION
 -- ==========================================================================
 
--- Seed default employees
+-- Seed default employees matching the new organizational role structure
 INSERT INTO users (employee_id, name, email, password, department, role, status) VALUES
-('ADM001', 'Alex Vance', 'admin@company.com', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'Operations', 'Administrator', 'Active'),
-('WRK001', 'John Doe', 'worker1@company.com', '312bba6ac1c4274943d7d3c1f346e8e27310c731e407ce5592d82f0d101fbff1', 'Production', 'Worker', 'Active'),
-('WRK002', 'Jane Smith', 'worker2@company.com', '312bba6ac1c4274943d7d3c1f346e8e27310c731e407ce5592d82f0d101fbff1', 'Warehouse', 'Worker', 'Active'),
-('WRK003', 'Bob Johnson', 'disabled@company.com', 'dde79399fb85ad1dfbaec103d360520c2590f9106832d830dff673eae18c39d9', 'Logistics', 'Worker', 'Disabled');
+('ADM001', 'Alex Vance', 'admin@company.com', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'Management', 'Director', 'Active'),
+('ADM002', 'Sarah Connor', 'hr@company.com', '96924614e866b96e49a88eb82f1b72e59e99a80e1c312781b0a8809c9dfd3d4b', 'Management', 'HR', 'Active'),
+('WRK001', 'John Doe', 'worker1@company.com', '312bba6ac1c4274943d7d3c1f346e8e27310c731e407ce5592d82f0d101fbff1', 'BOH', 'BOH Manager', 'Active'),
+('WRK002', 'Jane Smith', 'worker2@company.com', '312bba6ac1c4274943d7d3c1f346e8e27310c731e407ce5592d82f0d101fbff1', 'FOH', 'Waiter', 'Active'),
+('WRK003', 'Bob Johnson', 'disabled@company.com', 'dde79399fb85ad1dfbaec103d360520c2590f9106832d830dff673eae18c39d9', 'BOH', 'BOH Crew', 'Disabled'),
+('WRK004', 'David Miller', 'foh@company.com', '38933b4998069e2b6947ec3a0c5c4d63cd7650fa9b3dfbd9db0995c6a3e5d38a', 'FOH', 'FOH Manager', 'Active');
 
--- Seed default handbook sections
-INSERT INTO sections (id, title, order_num) VALUES
-('sec-1', 'Company Introduction', 1),
-('sec-2', 'Safety Guidelines', 2),
-('sec-3', 'Warehouse Procedures', 3),
-('sec-4', 'HR Policies', 4),
-('sec-5', 'Emergency Procedures', 5);
+-- Seed default handbook sections with audience target tags
+INSERT INTO sections (id, title, order_num, target_category) VALUES
+('sec-1', 'Company Introduction', 1, 'Both'),
+('sec-2', 'Safety Guidelines', 2, 'Both'),
+('sec-3', 'Warehouse Procedures', 3, 'BOH'),
+('sec-4', 'HR Policies', 4, 'Both'),
+('sec-5', 'Emergency Procedures', 5, 'Both'),
+('sec-6', 'FOH Operations', 6, 'FOH');
 
 -- Seed default handbook documents using dollar-quoting ($$) to safely handle multiline markdown
 INSERT INTO documents (id, section_id, title, content, order_num, last_updated) VALUES
@@ -240,7 +244,16 @@ In the event of an evacuation alarm (continuous high-pitched horn), follow these
 - **North/East Wings:** Main Car Park (Point A)
 - **South/West Wings:** Rear Field (Point B)
 
-*Do not re-enter the building until the Safety Officer declares it is safe to do so.*$$, 1, '2026-08-06 15:45:00+00');
+*Do not re-enter the building until the Safety Officer declares it is safe to do so.*$$, 1, '2026-08-06 15:45:00+00'),
+
+('doc-6-1', 'sec-6', 'Customer Service Standards', $$# Customer Service Standards
+
+Welcome to our front-of-house team! Outstanding service is key to our success.
+
+## General Guidelines
+- **Greeting:** Greet every customer with a warm smile and eye contact within 10 seconds of arrival.
+- **Attitude:** Maintain a helpful and polite posture at all times.
+- **Service Timing:** Keep table check-ins consistent. Check back on meals within 2 minutes of serving.$$, 1, '2026-08-07 09:00:00+00');
 
 -- Seed default FAQ threads
 INSERT INTO faq_threads (id, title, author_id, author_name, created_at, resolved, pinned_reply_id) VALUES
@@ -255,4 +268,4 @@ INSERT INTO faq_replies (id, thread_id, author_id, author_name, content, created
 
 -- Seed initial audit logs
 INSERT INTO audit_logs (id, user_id, user_name, action, timestamp) VALUES
-('log-1', 'ADM001', 'Alex Vance', 'Database initialized on Supabase server.', NOW());
+('log-1', 'ADM001', 'Alex Vance', 'Database initialized with granular department roles and category targeted sections.', NOW());

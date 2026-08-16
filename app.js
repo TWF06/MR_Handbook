@@ -11,6 +11,37 @@ let currentFAQThreadId = null;
 let activeAdminTab = 'admin-tab-dash';
 let lastViewBeforeSearch = 'worker'; // Keeps track of where to return after clear search
 
+// Department and Roles configurations
+const DEPT_ROLES = {
+  'Management': ['Director', 'HR', 'Administrative'],
+  'BOH': ['BOH Manager', 'CDP', 'SOUS', 'BOH Crew'],
+  'FOH': ['FOH Manager', 'Waiter', 'Barista']
+};
+
+function hasDashboardAccess(role) {
+  return ['Director', 'HR', 'Administrative', 'BOH Manager', 'FOH Manager'].includes(role);
+}
+
+function hasFullAdminAccess(role) {
+  return ['Director', 'HR', 'Administrative'].includes(role);
+}
+
+function populateRolesDropdown(deptVal, selectedRoleVal = null) {
+  const roleSelect = document.getElementById('crud-worker-role');
+  if (!roleSelect) return;
+  roleSelect.innerHTML = '';
+  const roles = DEPT_ROLES[deptVal] || [];
+  roles.forEach(role => {
+    const opt = document.createElement('option');
+    opt.value = role;
+    opt.textContent = role;
+    if (selectedRoleVal && role === selectedRoleVal) {
+      opt.selected = true;
+    }
+    roleSelect.appendChild(opt);
+  });
+}
+
 // UI Selectors
 const el = {
   viewAuth: document.getElementById('view-auth'),
@@ -201,6 +232,20 @@ async function switchView(viewName) {
     el.paneSearch.classList.remove('hidden');
   }
   
+  // Toggle Admin/Worker buttons in user dropdown header
+  if (currentSession && hasDashboardAccess(currentSession.role)) {
+    if (viewName === 'admin') {
+      el.btnGoAdmin.classList.add('hidden');
+      el.btnGoWorker.classList.remove('hidden');
+    } else {
+      el.btnGoAdmin.classList.remove('hidden');
+      el.btnGoWorker.classList.add('hidden');
+    }
+  } else {
+    el.btnGoAdmin.classList.add('hidden');
+    el.btnGoWorker.classList.add('hidden');
+  }
+
   // Update sidebar active highlights
   updateLeftSidebarActiveItem();
   lucide.createIcons();
@@ -218,28 +263,34 @@ async function checkAuth() {
     el.navUserRole.textContent = currentSession.role;
     el.userBadgeName.textContent = currentSession.name.charAt(0).toUpperCase();
     
-    // Check role to toggle admin links
-    if (currentSession.role === 'Administrator') {
-      el.btnGoAdmin.classList.remove('hidden');
-    } else {
-      el.btnGoAdmin.classList.add('hidden');
-      el.btnGoWorker.classList.add('hidden');
-    }
-    
     try {
       await DB.initializeDatabase();
       await buildLeftSidebar();
       
       // Load default section and doc from memory or local state
       const sections = await DB.getSections();
-      if (sections.length > 0) {
-        currentSectionId = sections[0].id;
+      const allowedSections = sections.filter(sec => {
+        if (!currentSession) return false;
+        if (currentSession.department === 'Management') return true;
+        if (currentSession.department === 'BOH') return sec.targetCategory === 'BOH' || sec.targetCategory === 'Both';
+        if (currentSession.department === 'FOH') return sec.targetCategory === 'FOH' || sec.targetCategory === 'Both';
+        return false;
+      });
+      
+      if (allowedSections.length > 0) {
+        currentSectionId = allowedSections[0].id;
         const docs = await DB.getDocuments(currentSectionId);
         if (docs.length > 0) {
           currentDocumentId = docs[0].id;
         }
       }
-      await switchView('worker');
+      
+      // If admin/manager, land on dashboard first. Otherwise, worker portal
+      if (hasDashboardAccess(currentSession.role)) {
+        await switchView('admin');
+      } else {
+        await switchView('worker');
+      }
     } catch (err) {
       console.error("Auth initialization failed:", err);
       DB.clearSession();
@@ -328,7 +379,16 @@ async function buildLeftSidebar() {
     const sections = await DB.getSections();
     el.leftNavSections.innerHTML = '';
     
-    for (const sec of sections) {
+    const session = DB.getCurrentSession();
+    const allowedSections = sections.filter(sec => {
+      if (!session) return false;
+      if (session.department === 'Management') return true;
+      if (session.department === 'BOH') return sec.targetCategory === 'BOH' || sec.targetCategory === 'Both';
+      if (session.department === 'FOH') return sec.targetCategory === 'FOH' || sec.targetCategory === 'Both';
+      return false;
+    });
+    
+    for (const sec of allowedSections) {
       const docs = await DB.getDocuments(sec.id);
       
       const secItem = document.createElement('div');
@@ -338,10 +398,16 @@ async function buildLeftSidebar() {
       const btnSec = document.createElement('button');
       btnSec.className = `nav-item ${isSecActive ? 'active' : ''}`;
       btnSec.dataset.sectionId = sec.id;
+      
+      let displayTitle = sec.title;
+      if (session && session.department === 'Management') {
+        displayTitle += ` [${sec.targetCategory}]`;
+      }
+      
       btnSec.innerHTML = `
         <div class="nav-item-content">
           <i data-lucide="folder"></i>
-          <span>${sec.title}</span>
+          <span>${displayTitle}</span>
         </div>
         <i data-lucide="chevron-right" class="chevron-indicator ${isSecActive ? 'rotated' : ''}"></i>
       `;
@@ -935,6 +1001,20 @@ el.btnCreateThread.addEventListener('click', () => {
 // ADMINISTRATOR DASHBOARD & SUB-TABS
 // ==========================================================================
 async function loadAdminTab(tabId) {
+  // Security fallback if not full admin
+  if (currentSession && !hasFullAdminAccess(currentSession.role)) {
+    if (tabId === 'admin-tab-sections' || tabId === 'admin-tab-documents') {
+      tabId = 'admin-tab-dash';
+    }
+    // Hide buttons from DOM
+    document.querySelectorAll('.tab-btn[data-target="admin-tab-sections"]').forEach(btn => btn.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn[data-target="admin-tab-documents"]').forEach(btn => btn.classList.add('hidden'));
+  } else {
+    // Show buttons
+    document.querySelectorAll('.tab-btn[data-target="admin-tab-sections"]').forEach(btn => btn.classList.remove('hidden'));
+    document.querySelectorAll('.tab-btn[data-target="admin-tab-documents"]').forEach(btn => btn.classList.remove('hidden'));
+  }
+
   activeAdminTab = tabId;
   
   el.tabButtons.forEach(btn => {
@@ -1134,6 +1214,10 @@ function showWorkerCrudModal(mode, user = null) {
     document.getElementById('crud-worker-password').required = true;
     document.getElementById('crud-password-help').classList.add('hidden');
     document.getElementById('crud-status-group').classList.add('hidden');
+    
+    // Default department and roles setup
+    document.getElementById('crud-worker-dept').value = 'Management';
+    populateRolesDropdown('Management');
   } else {
     document.getElementById('worker-modal-title').textContent = "Edit Employee Profile";
     document.getElementById('crud-worker-id').value = user.employeeId;
@@ -1141,7 +1225,10 @@ function showWorkerCrudModal(mode, user = null) {
     document.getElementById('crud-worker-name').value = user.name;
     document.getElementById('crud-worker-email').value = user.email;
     document.getElementById('crud-worker-dept').value = user.department;
-    document.getElementById('crud-worker-role').value = user.role;
+    
+    // Populate correct roles for editing user department
+    populateRolesDropdown(user.department, user.role);
+    
     document.getElementById('crud-worker-status').value = user.status;
     
     // Hide password fields during edit
@@ -1242,10 +1329,10 @@ async function loadAdminSectionsList() {
           <button class="btn btn-sm btn-outline-danger btn-delete-sec" title="Delete Section">Delete</button>
         </div>
       `;
-      
-      div.querySelector('.btn-edit-sec').addEventListener('click', () => {
+           div.querySelector('.btn-edit-sec').addEventListener('click', () => {
         el.adminSectionId.value = sec.id;
         el.adminSectionTitle.value = sec.title;
+        document.getElementById('admin-section-target').value = sec.targetCategory || 'Both';
         el.adminSectionFormTitle.textContent = "Rename Section";
         el.btnAdminCancelSection.classList.remove('hidden');
         el.adminSectionTitle.focus();
@@ -1300,14 +1387,16 @@ async function loadAdminSectionsList() {
   }
 }
 
+
 // Save Section Form Submit
 el.formAdminSection.addEventListener('submit', async (e) => {
   e.preventDefault();
   const id = el.adminSectionId.value;
   const title = el.adminSectionTitle.value;
+  const targetCategory = document.getElementById('admin-section-target').value;
   
   try {
-    await DB.saveSection({ id: id || null, title: title });
+    await DB.saveSection({ id: id || null, title: title, targetCategory: targetCategory });
     showToast("Section Saved", "Section was stored successfully.", "success");
     cancelSectionEdit();
     await buildLeftSidebar();
@@ -1322,6 +1411,7 @@ el.btnAdminCancelSection.addEventListener('click', cancelSectionEdit);
 function cancelSectionEdit() {
   el.formAdminSection.reset();
   el.adminSectionId.value = '';
+  document.getElementById('admin-section-target').value = 'Both';
   el.adminSectionFormTitle.textContent = "Create New Section";
   el.btnAdminCancelSection.classList.add('hidden');
 }
@@ -1695,4 +1785,11 @@ el.btnToggleTheme.addEventListener('click', toggleTheme);
 document.addEventListener('DOMContentLoaded', () => {
   loadPersistedTheme();
   checkAuth();
+  
+  const deptSelect = document.getElementById('crud-worker-dept');
+  if (deptSelect) {
+    deptSelect.addEventListener('change', (e) => {
+      populateRolesDropdown(e.target.value);
+    });
+  }
 });
