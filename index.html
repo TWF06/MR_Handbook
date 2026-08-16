@@ -710,5 +710,26 @@
 
   <!-- Main App Script -->
   <script type="module" src="app.js?v=2"></script>
+
+  <!-- Debugging Error Overlay -->
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      showErrorOverlay("JavaScript Runtime Error", message + "\nLine: " + lineno + ", Col: " + colno + "\nSource: " + source);
+      return false;
+    };
+    window.addEventListener('unhandledrejection', function(event) {
+      showErrorOverlay("Unhandled Promise Rejection", event.reason);
+    });
+    function showErrorOverlay(title, details) {
+      let overlay = document.getElementById('debug-error-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'debug-error-overlay';
+        overlay.style.cssText = "position: fixed; top: 10%; left: 5%; right: 5%; background: #fee2e2; color: #991b1b; padding: 25px; border-radius: 8px; border: 2px solid #ef4444; z-index: 1000000; box-shadow: 0 10px 25px rgba(0,0,0,0.3); font-family: monospace; font-size: 14px; white-space: pre-wrap; line-height: 1.6;";
+        document.body.appendChild(overlay);
+      }
+      overlay.innerHTML = "<h3 style='margin-top:0;color:#b91c1c;'>" + title + "</h3>" + details;
+    }
+  </script>
 </body>
 </html>
