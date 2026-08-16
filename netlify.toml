@@ -1,0 +1,6 @@
+# Netlify Configuration for MR Handbook Manager
+# Since this is a static site with Vanilla JS, no build process is required.
+
+[build]
+  command = "echo 'Static deploy successful'"
+  publish = "."
