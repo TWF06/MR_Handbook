@@ -1,4 +1,4 @@
-import * as DB from './db.js';
+import * as DB from './db.js?v=3';
 
 // ==========================================================================
 // STATE MANAGEMENT & ROUTING
