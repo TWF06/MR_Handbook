@@ -870,7 +870,7 @@ async function loadFAQThreadStream(threadId) {
     el.activeThreadAuthor.textContent = thread.authorId === currentSession.employeeId ? 'You' : thread.authorName;
     el.activeThreadDate.textContent = new Date(thread.createdAt).toLocaleString();
     
-    if (currentSession.role === 'Administrator') {
+    if (hasDashboardAccess(currentSession.role)) {
       el.activeThreadAdminOptions.classList.remove('hidden');
       el.btnAdminResolveThread.textContent = thread.resolved ? 'Re-open Thread' : 'Resolve Thread';
     } else {
@@ -897,7 +897,7 @@ async function loadFAQThreadStream(threadId) {
           </div>
           <div class="reply-body">${rep.content}</div>
           
-          ${currentSession.role === 'Administrator' ? `
+          ${hasDashboardAccess(currentSession.role) ? `
             <div class="reply-actions">
               <button class="reply-action-btn btn-pin-reply" data-reply-id="${rep.id}">
                 <i data-lucide="pin"></i> ${isPinned ? 'Unpin Answer' : 'Pin Answer'}
@@ -909,7 +909,7 @@ async function loadFAQThreadStream(threadId) {
           ` : ''}
         `;
         
-        if (currentSession.role === 'Administrator') {
+        if (hasDashboardAccess(currentSession.role)) {
           repCard.querySelector('.btn-pin-reply').addEventListener('click', async () => {
             const nextPinId = isPinned ? null : rep.id;
             await DB.pinFAQReply(threadId, nextPinId);
