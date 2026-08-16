@@ -56,15 +56,15 @@ export const MANAGEMENT_ROLES = [
 ];
 
 export const ROLE_HIERARCHY = {
-  'Director': 4,
-  'HR': 3,
-  'Administrative': 2,
-  'BOH Manager': 1,
-  'FOH Manager': 1,
-  'CDP': 0,
-  'SOUS': 0,
-  'BOH Crew': 0,
-  'Waiter': 0,
+  'Director': 9,
+  'HR': 8,
+  'Administrative': 7,
+  'BOH Manager': 6,
+  'FOH Manager': 5,
+  'CDP': 4,
+  'SOUS': 3,
+  'BOH Crew': 2,
+  'Waiter': 1,
   'Barista': 0
 };
 
@@ -640,7 +640,7 @@ export async function adminResetPassword(employeeId, newPassword) {
 
 export async function getUsers() {
   await authorize(MANAGER_ROLES);
-  const { data, error } = await supabase.from('users').select('*').order('employee_id');
+  const { data, error } = await supabase.from('users').select('*');
   if (error) throw new Error(error.message);
   
   return data.map(u => ({
@@ -650,7 +650,14 @@ export async function getUsers() {
     department: u.department,
     role: u.role,
     status: u.status
-  }));
+  })).sort((a, b) => {
+    const levelA = ROLE_HIERARCHY[a.role] || 0;
+    const levelB = ROLE_HIERARCHY[b.role] || 0;
+    if (levelA !== levelB) {
+      return levelB - levelA; // Highest role level first
+    }
+    return a.employeeId.localeCompare(b.employeeId); // Alphabetical secondary sort
+  });
 }
 
 // ================= SECTION MANAGEMENT (ADMIN ONLY CRUD / WORKER READ) =================
