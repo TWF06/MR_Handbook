@@ -82,12 +82,16 @@ ALTER TABLE audit_logs DISABLE ROW LEVEL SECURITY;
 
 -- Seed default employees matching the new organizational role structure
 INSERT INTO users (employee_id, name, email, password, department, role, status) VALUES
-('ADM001', 'Alex Vance', 'admin@company.com', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'Management', 'Director', 'Active'),
-('ADM002', 'Sarah Connor', 'hr@company.com', '96924614e866b96e49a88eb82f1b72e59e99a80e1c312781b0a8809c9dfd3d4b', 'Management', 'HR', 'Active'),
-('WRK001', 'John Doe', 'worker1@company.com', '312bba6ac1c4274943d7d3c1f346e8e27310c731e407ce5592d82f0d101fbff1', 'BOH', 'BOH Manager', 'Active'),
-('WRK002', 'Jane Smith', 'worker2@company.com', '312bba6ac1c4274943d7d3c1f346e8e27310c731e407ce5592d82f0d101fbff1', 'FOH', 'Waiter', 'Active'),
-('WRK003', 'Bob Johnson', 'disabled@company.com', 'dde79399fb85ad1dfbaec103d360520c2590f9106832d830dff673eae18c39d9', 'BOH', 'BOH Crew', 'Disabled'),
-('WRK004', 'David Miller', 'foh@company.com', '38933b4998069e2b6947ec3a0c5c4d63cd7650fa9b3dfbd9db0995c6a3e5d38a', 'FOH', 'FOH Manager', 'Active');
+('DIR001', 'Alex Vance', 'director@company.com', '9e4d7bba246abe731743986c4dc50897b68b1d0249a066abb3530fcbaa33dab3', 'Management', 'Director', 'Active'),
+('HR001', 'Sarah Connor', 'hr@company.com', '070a3b5e8d4bd5c46acccb91c9c54614c0cd649e78c4c4719e3a64270bae5ddf', 'Management', 'HR', 'Active'),
+('ADM001', 'Thomas Anderson', 'admin@company.com', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'Management', 'Administrative', 'Active'),
+('BOH001', 'John Doe', 'bohmanager@company.com', '67eb42892e19b0e238d5b72b3f6ed024ca65d4a7664cd6f4f7b4d6ef1d5917d9', 'BOH', 'BOH Manager', 'Active'),
+('BOH002', 'Gordon Ramsay', 'cdp@company.com', 'b770991fb7dffe151f346b0adb653d613e2635d2d47e689298ca09947c7a33a8', 'BOH', 'CDP', 'Active'),
+('BOH003', 'Marco White', 'sous@company.com', '738ba3cca33b85906c607f75368699002c56d4839ca4a2dcf847cc6503bd71f3', 'BOH', 'SOUS', 'Active'),
+('BOH004', 'Bob Johnson', 'bohcrew@company.com', 'ebbf3f7d82af16cc24940ac8edf96e7a82df1784e8c36e71f97fd591e2cf6e35', 'BOH', 'BOH Crew', 'Active'),
+('FOH001', 'David Miller', 'fohmanager@company.com', '7d7b214b709614f55a425311fbf5d655e41d6ad3dde3168a61016e558eabac9d', 'FOH', 'FOH Manager', 'Active'),
+('FOH002', 'Jane Smith', 'waiter@company.com', '1a303e87599632e4a19d3603ca36a6762dea330dccb8017796d6a3b9f82154ac', 'FOH', 'Waiter', 'Active'),
+('FOH003', 'James Hoffman', 'barista@company.com', '7d551a4fb421bae4957db1baa81c617a80a5a7b5fa173660cc0db0be511f95a7', 'FOH', 'Barista', 'Active');
 
 -- Seed default handbook sections with audience target tags
 INSERT INTO sections (id, title, order_num, target_category) VALUES
@@ -257,15 +261,15 @@ Welcome to our front-of-house team! Outstanding service is key to our success.
 
 -- Seed default FAQ threads
 INSERT INTO faq_threads (id, title, author_id, author_name, created_at, resolved, pinned_reply_id) VALUES
-('faq-1', 'How do I request a safety gear replacement?', 'WRK001', 'John Doe', '2026-08-06 10:15:00+00', TRUE, 'rep-1-1'),
-('faq-2', 'Where can I view the Shift C holiday schedule?', 'WRK002', 'Jane Smith', '2026-08-07 11:40:00+00', FALSE, NULL);
+('faq-1', 'How do I request a safety gear replacement?', 'BOH001', 'John Doe', '2026-08-06 10:15:00+00', TRUE, 'rep-1-1'),
+('faq-2', 'Where can I view the Shift C holiday schedule?', 'FOH002', 'Jane Smith', '2026-08-07 11:40:00+00', FALSE, NULL);
 
 -- Seed default FAQ replies
 INSERT INTO faq_replies (id, thread_id, author_id, author_name, content, created_at) VALUES
-('rep-1-1', 'faq-1', 'ADM001', 'Alex Vance (Admin)', 'For safety gear replacements, visit the Safety Office on the first floor. Bring your old gear (if damaged) and fill out the PPE Replacement Request form. They will issue replacements immediately.', '2026-08-06 11:00:00+00'),
-('rep-1-2', 'faq-1', 'WRK001', 'John Doe', 'Perfect, thank you! I got my steel-toed boots replaced today.', '2026-08-06 14:30:00+00'),
-('rep-2-1', 'faq-2', 'ADM001', 'Alex Vance (Admin)', 'I will upload the Q3/Q4 holiday rosters in the HR Policy section later this afternoon. Keep an eye out!', '2026-08-07 13:10:00+00');
+('rep-1-1', 'faq-1', 'DIR001', 'Alex Vance (Admin)', 'For safety gear replacements, visit the Safety Office on the first floor. Bring your old gear (if damaged) and fill out the PPE Replacement Request form. They will issue replacements immediately.', '2026-08-06 11:00:00+00'),
+('rep-1-2', 'faq-1', 'BOH001', 'John Doe', 'Perfect, thank you! I got my steel-toed boots replaced today.', '2026-08-06 14:30:00+00'),
+('rep-2-1', 'faq-2', 'DIR001', 'Alex Vance (Admin)', 'I will upload the Q3/Q4 holiday rosters in the HR Policy section later this afternoon. Keep an eye out!', '2026-08-07 13:10:00+00');
 
 -- Seed initial audit logs
 INSERT INTO audit_logs (id, user_id, user_name, action, timestamp) VALUES
-('log-1', 'ADM001', 'Alex Vance', 'Database initialized with granular department roles and category targeted sections.', NOW());
+('log-1', 'DIR001', 'Alex Vance', 'Database initialized with granular department roles and category targeted sections.', NOW());

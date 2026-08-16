@@ -94,12 +94,16 @@ export function canManageUser(managerRole, targetRole) {
 
 // Seed data definition inside db.js to support database resets
 const SEED_USERS = [
-  { employee_id: "ADM001", name: "Alex Vance", email: "admin@company.com", password: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", department: "Management", role: "Director", status: "Active" },
-  { employee_id: "ADM002", name: "Sarah Connor", email: "hr@company.com", password: "96924614e866b96e49a88eb82f1b72e59e99a80e1c312781b0a8809c9dfd3d4b", department: "Management", role: "HR", status: "Active" },
-  { employee_id: "WRK001", name: "John Doe", email: "worker1@company.com", password: "312bba6ac1c4274943d7d3c1f346e8e27310c731e407ce5592d82f0d101fbff1", department: "BOH", role: "BOH Manager", status: "Active" },
-  { employee_id: "WRK002", name: "Jane Smith", email: "worker2@company.com", password: "312bba6ac1c4274943d7d3c1f346e8e27310c731e407ce5592d82f0d101fbff1", department: "FOH", role: "Waiter", status: "Active" },
-  { employee_id: "WRK003", name: "Bob Johnson", email: "disabled@company.com", password: "dde79399fb85ad1dfbaec103d360520c2590f9106832d830dff673eae18c39d9", department: "BOH", role: "BOH Crew", status: "Disabled" },
-  { employee_id: "WRK004", name: "David Miller", email: "foh@company.com", password: "38933b4998069e2b6947ec3a0c5c4d63cd7650fa9b3dfbd9db0995c6a3e5d38a", department: "FOH", role: "FOH Manager", status: "Active" }
+  { employee_id: "DIR001", name: "Alex Vance", email: "director@company.com", password: "9e4d7bba246abe731743986c4dc50897b68b1d0249a066abb3530fcbaa33dab3", department: "Management", role: "Director", status: "Active" },
+  { employee_id: "HR001", name: "Sarah Connor", email: "hr@company.com", password: "070a3b5e8d4bd5c46acccb91c9c54614c0cd649e78c4c4719e3a64270bae5ddf", department: "Management", role: "HR", status: "Active" },
+  { employee_id: "ADM001", name: "Thomas Anderson", email: "admin@company.com", password: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", department: "Management", role: "Administrative", status: "Active" },
+  { employee_id: "BOH001", name: "John Doe", email: "bohmanager@company.com", password: "67eb42892e19b0e238d5b72b3f6ed024ca65d4a7664cd6f4f7b4d6ef1d5917d9", department: "BOH", role: "BOH Manager", status: "Active" },
+  { employee_id: "BOH002", name: "Gordon Ramsay", email: "cdp@company.com", password: "b770991fb7dffe151f346b0adb653d613e2635d2d47e689298ca09947c7a33a8", department: "BOH", role: "CDP", status: "Active" },
+  { employee_id: "BOH003", name: "Marco White", email: "sous@company.com", password: "738ba3cca33b85906c607f75368699002c56d4839ca4a2dcf847cc6503bd71f3", department: "BOH", role: "SOUS", status: "Active" },
+  { employee_id: "BOH004", name: "Bob Johnson", email: "bohcrew@company.com", password: "ebbf3f7d82af16cc24940ac8edf96e7a82df1784e8c36e71f97fd591e2cf6e35", department: "BOH", role: "BOH Crew", status: "Active" },
+  { employee_id: "FOH001", name: "David Miller", email: "fohmanager@company.com", password: "7d7b214b709614f55a425311fbf5d655e41d6ad3dde3168a61016e558eabac9d", department: "FOH", role: "FOH Manager", status: "Active" },
+  { employee_id: "FOH002", name: "Jane Smith", email: "waiter@company.com", password: "1a303e87599632e4a19d3603ca36a6762dea330dccb8017796d6a3b9f82154ac", department: "FOH", role: "Waiter", status: "Active" },
+  { employee_id: "FOH003", name: "James Hoffman", email: "barista@company.com", password: "7d551a4fb421bae4957db1baa81c617a80a5a7b5fa173660cc0db0be511f95a7", department: "FOH", role: "Barista", status: "Active" }
 ];
 
 const SEED_SECTIONS = [
@@ -310,14 +314,14 @@ Welcome to our front-of-house team! Outstanding service is key to our success.
 ];
 
 const SEED_FAQ_THREADS = [
-  { id: "faq-1", title: "How do I request a safety gear replacement?", author_id: "WRK001", author_name: "John Doe", resolved: true, pinned_reply_id: "rep-1-1" },
-  { id: "faq-2", title: "Where can I view the Shift C holiday schedule?", author_id: "WRK002", author_name: "Jane Smith", resolved: false, pinned_reply_id: null }
+  { id: "faq-1", title: "How do I request a safety gear replacement?", author_id: "BOH001", author_name: "John Doe", resolved: true, pinned_reply_id: "rep-1-1" },
+  { id: "faq-2", title: "Where can I view the Shift C holiday schedule?", author_id: "FOH002", author_name: "Jane Smith", resolved: false, pinned_reply_id: null }
 ];
 
 const SEED_FAQ_REPLIES = [
-  { id: "rep-1-1", thread_id: "faq-1", author_id: "ADM001", author_name: "Alex Vance (Admin)", content: "For safety gear replacements, visit the Safety Office on the first floor. Bring your old gear (if damaged) and fill out the PPE Replacement Request form. They will issue replacements immediately." },
-  { id: "rep-1-2", thread_id: "faq-1", author_id: "WRK001", author_name: "John Doe", content: "Perfect, thank you! I got my steel-toed boots replaced today." },
-  { id: "rep-2-1", thread_id: "faq-2", author_id: "ADM001", author_name: "Alex Vance (Admin)", content: "I will upload the Q3/Q4 holiday rosters in the HR Policy section later this afternoon. Keep an eye out!" }
+  { id: "rep-1-1", thread_id: "faq-1", author_id: "DIR001", author_name: "Alex Vance (Admin)", content: "For safety gear replacements, visit the Safety Office on the first floor. Bring your old gear (if damaged) and fill out the PPE Replacement Request form. They will issue replacements immediately." },
+  { id: "rep-1-2", thread_id: "faq-1", author_id: "BOH001", author_name: "John Doe", content: "Perfect, thank you! I got my steel-toed boots replaced today." },
+  { id: "rep-2-1", thread_id: "faq-2", author_id: "DIR001", author_name: "Alex Vance (Admin)", content: "I will upload the Q3/Q4 holiday rosters in the HR Policy section later this afternoon. Keep an eye out!" }
 ];
 
 // Helper to hash password using Web Crypto API (SHA-256)

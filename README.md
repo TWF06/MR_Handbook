@@ -86,9 +86,16 @@ To deploy the application to Vercel:
 
 | User Role | Email | Password | Full Name | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **Administrator** | `admin@company.com` | `admin123` | Alex Vance | Active |
-| **Worker** | `worker1@company.com` | `worker123` | John Doe | Active |
-| **Worker** | `worker2@company.com` | `worker123` | Jane Smith | Active |
-| **Worker** | `disabled@company.com` | `disabled123` | Bob Johnson | Disabled |
+| **Director** | `director@company.com` | `director123` | Alex Vance | Active |
+| **HR** | `hr@company.com` | `hr123` | Sarah Connor | Active |
+| **Administrative** | `admin@company.com` | `admin123` | Thomas Anderson | Active |
+| **BOH Manager** | `bohmanager@company.com` | `bohmanager123` | John Doe | Active |
+| **CDP** | `cdp@company.com` | `cdp123` | Gordon Ramsay | Active |
+| **SOUS** | `sous@company.com` | `sous123` | Marco White | Active |
+| **BOH Crew** | `bohcrew@company.com` | `bohcrew123` | Bob Johnson | Active |
+| **FOH Manager** | `fohmanager@company.com` | `fohmanager123` | David Miller | Active |
+| **Waiter** | `waiter@company.com` | `waiter123` | Jane Smith | Active |
+| **Barista** | `barista@company.com` | `barista123` | James Hoffman | Active |
 
 *All password records are stored securely using **SHA-256** hashing.*
+
