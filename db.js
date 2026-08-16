@@ -77,6 +77,18 @@ export function canManageUser(managerRole, targetRole) {
   const tLevel = getRoleLevel(targetRole);
   
   if (managerRole === 'Director') return true; // Director has highest authorization
+  
+  // Department-specific role constraints for BOH and FOH Managers
+  const BOH_ROLES = ['BOH Manager', 'CDP', 'SOUS', 'BOH Crew'];
+  const FOH_ROLES = ['FOH Manager', 'Waiter', 'Barista'];
+  
+  if (managerRole === 'BOH Manager' && !BOH_ROLES.includes(targetRole)) {
+    return false;
+  }
+  if (managerRole === 'FOH Manager' && !FOH_ROLES.includes(targetRole)) {
+    return false;
+  }
+  
   return mLevel > tLevel;
 }
 
