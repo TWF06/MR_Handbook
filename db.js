@@ -2,13 +2,43 @@
 // MR HANDBOOK MANAGER - SUPABASE BACKEND CONTROLLER
 // ==========================================================================
 
-const { createClient } = window.supabase;
-
 const supabaseUrl = 'https://kzakbvsxlfwhquhmdgns.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6YWtidnN4bGZ3aHF1aG1kZ25zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzNzIxNzMsImV4cCI6MjEwMTk0ODE3M30.O_MPY0tYUpmNzwEOnHC4BPVB3rz94y-RuaECd7PpX_c';
 
-// Initialize the Supabase Client globally
-export const supabase = createClient(supabaseUrl, supabaseKey);
+let clientSupabase = null;
+try {
+  const client = window.supabase;
+  if (!client) {
+    throw new Error("Supabase library not loaded. This is often caused by ad-blockers blocking Supabase CDN links.");
+  }
+  clientSupabase = client.createClient(supabaseUrl, supabaseKey);
+} catch (err) {
+  console.error("Supabase initialization error:", err);
+  // Expose a dummy client that returns empty promises to prevent code from throwing type errors
+  clientSupabase = {
+    from: () => ({
+      select: () => ({
+        order: () => Promise.resolve({ data: [], error: { message: "Database offline (Supabase blocked by adblocker/network)" } }),
+        eq: () => ({
+          single: () => Promise.resolve({ data: null, error: { message: "Database offline" } })
+        })
+      }),
+      insert: () => Promise.resolve({ error: { message: "Database offline" } }),
+      update: () => Promise.resolve({ error: { message: "Database offline" } }),
+      delete: () => Promise.resolve({ error: { message: "Database offline" } })
+    })
+  };
+  
+  // Show user-friendly overlay banner
+  window.addEventListener('DOMContentLoaded', () => {
+    const alertDiv = document.createElement('div');
+    alertDiv.style.cssText = "position: fixed; top: 0; left: 0; right: 0; background: #fee2e2; color: #991b1b; padding: 15px; border-bottom: 2px solid #fca5a5; z-index: 100000; box-shadow: 0 4px 10px rgba(0,0,0,0.15); font-family: sans-serif; font-size: 14px; line-height: 1.5; text-align: center;";
+    alertDiv.innerHTML = "<strong>Database Connection Error:</strong> The Supabase client could not be loaded. This is usually caused by ad-blockers (like Brave Shield, uBlock Origin, etc.) blocking Supabase CDN scripts. Please <strong>disable your adblocker</strong> for this site and refresh.";
+    document.body.prepend(alertDiv);
+  });
+}
+
+export const supabase = clientSupabase;
 
 // Seed data definition inside db.js to support database resets
 // Role permission groups for security routing and validation
